@@ -7,6 +7,12 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&display=swap');
 
+        /* إجبار المتصفح على طباعة الألوان والخطوط الباهتة بدقة */
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
             background-color: #2c3e50;
@@ -48,16 +54,12 @@
         }
 
         .btn-download:hover { background-color: #2ecc71; }
-        
-        .loading-text {
-            display: none;
+
+        .instructions {
             color: #e74c3c;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 16px;
             margin-top: 15px;
-            padding: 10px;
-            border: 2px dashed #e74c3c;
-            border-radius: 5px;
         }
 
         /* الحاوية التي ستجمع الـ 50 صفحة */
@@ -66,27 +68,28 @@
             flex-direction: column;
             align-items: center;
             gap: 20px;
+            width: 100%;
         }
 
-        /* إعدادات ورقة A4 */
+        /* إعدادات ورقة A4 الدقيقة */
         .a4-paper {
             width: 210mm;
             height: 297mm;
             background-color: white;
             box-sizing: border-box;
-            /* هوامش دقيقة جداً لملء الورقة بـ 14 سطراً (بدون مساحة بيضاء مهدرة) */
-            padding: 22.5mm 15mm; 
+            padding: 22.5mm 15mm; /* هوامش لضبط 14 سطراً */
             position: relative;
             box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            page-break-after: always;
+            page-break-after: always; /* سر المهنة: فصل الصفحات عند الطباعة */
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         /* سطر الكتابة الموحد */
         .line-row {
             height: 1.8cm;
-            line-height: 1.7cm; /* لضبط الحروف لتلامس السطر */
-            border-bottom: 2px solid #a4b0be; /* السطر الأزرق */
+            line-height: 1.7cm;
+            border-bottom: 2px solid #a4b0be;
             font-family: 'Aref Ruqaa', serif;
             font-size: 38px;
             white-space: nowrap;
@@ -94,7 +97,7 @@
             box-sizing: border-box;
         }
 
-        /* لضبط المسافات في اللغة الكردية لتظهر واضحة */
+        /* ضبط اللغة الكردية */
         [lang="ku"] .line-row {
             font-size: 36px;
             padding-right: 25px;
@@ -104,23 +107,38 @@
         .trace { color: #d1d8e0; }
         .empty { color: transparent; }
 
+        /* إعدادات الطباعة الأصلية (Native Print) */
+        @page {
+            size: A4 portrait;
+            margin: 0; /* إزالة هوامش المتصفح الافتراضية المزعجة */
+        }
+
         @media print {
-            body { background: white; padding: 0; }
-            .header-panel { display: none !important; }
-            .a4-paper { box-shadow: none; margin: 0; }
-            #pdf-container { gap: 0; }
+            body { 
+                background: white; 
+                padding: 0; 
+                margin: 0;
+            }
+            .header-panel { display: none !important; } /* إخفاء الأزرار عند الطباعة */
+            #pdf-container { 
+                gap: 0; 
+                display: block; 
+            }
+            .a4-paper { 
+                box-shadow: none; 
+                margin: 0; 
+                border: none;
+            }
         }
     </style>
-    <!-- مكتبة تحويل لـ PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
     <div class="header-panel">
         <h1>كراسة الـ 50 صفحة (عربي + كردي)</h1>
         <p>30 صفحة عربي، 10 صفحات شعر مزدوج، 10 صفحات كردي</p>
-        <button class="btn-download" onclick="generateAllPDF()">📥 تحميل الـ 50 صفحة بملف PDF واحد</button>
-        <div id="loading" class="loading-text">⏳ جاري صناعة 50 صفحة... العملية تستغرق حوالي 20 ثانية، الرجاء عدم إغلاق الصفحة!</div>
+        <button class="btn-download" onclick="window.print()">📥 حفظ الكراسة بتنسيق PDF</button>
+        <div class="instructions">⚠️ ملاحظة: عند ظهور نافذة الطباعة، اختر "حفظ بتنسيق PDF" (Save as PDF).</div>
     </div>
 
     <div id="pdf-container">
@@ -128,7 +146,7 @@
     </div>
 
     <script>
-        // 1. بيانات الدروس العربية (60 درساً = 30 صفحة، لأن كل صفحة تحوي درسيْن)
+        // 1. بيانات الدروس العربية (60 درساً = 30 صفحة)
         const arabicSingle = [
             "ا ل ك ط ظ", "ب ت ث ف", "ج ح خ", "د ذ ر ز", "س ش", "ص ض", "ع غ", "م ن هـ و ي", "ق ف", "لا ـلا",
             "أب أخ أم", "جد عم خال", "باب بيت نور", "قمر شمس نجم", "سيف رمح قوس", "علم عمل أمل", "صدق صبر شكر", "قلب عقل روح", "بحر نهر موج", "ورد زهر شجر",
@@ -138,7 +156,7 @@
             "يد واحدة لا تصفق", "الجار قبل الدار", "الرفيق قبل الطريق", "الأفعال أبلغ من الأقوال", "عامل الناس كما تحب", "العلم يبني بيوتاً", "الجهل يهدم بيت العز", "من طلب العلا سهر", "خير جليس في الزمان", "وما نيل المطالب بالتمني"
         ];
 
-        // 2. بيانات الشعر العربي المزدوج (10 أبيات = 10 صفحات، كل صفحة بها بيت كامل)
+        // 2. بيانات الشعر العربي المزدوج (10 أبيات = 10 صفحات)
         const arabicDouble = [
             ["دقات قلب المرء قائلة له", "إن الحياة دقائق وثواني"],
             ["وما نيل المطالب بالتمني", "ولكن تؤخذ الدنيا غلابا"],
@@ -169,7 +187,7 @@
         const container = document.getElementById('pdf-container');
         let htmlContent = '';
 
-        // بناء نموذج مفرد (سطر أستاذ + 4 شف + 2 فارغ) = 7 أسطر
+        // بناء نموذج مفرد (سطر أستاذ + 4 شف + 2 فارغ)
         function generateSingleBlock(text) {
             let block = `<div class="line-row master">${text}</div>`;
             for(let i=0; i<4; i++) block += `<div class="line-row trace">${text}</div>`;
@@ -177,7 +195,7 @@
             return block;
         }
 
-        // بناء نموذج مزدوج (سطرين أستاذ + 8 شف + 4 فارغ) = 14 سطراً تملأ الورقة بالكامل
+        // بناء نموذج مزدوج (سطرين أستاذ + 8 شف + 4 فارغ)
         function generateDoubleBlock(line1, line2) {
             let block = `<div class="line-row master">${line1}</div>`;
             block += `<div class="line-row master">${line2}</div>`;
@@ -192,9 +210,7 @@
             return block;
         }
 
-        // --- توليد الـ 50 صفحة ---
-
-        // 1. أول 30 صفحة (عربي مفرد)
+        // 1. توليد أول 30 صفحة (عربي مفرد)
         for(let i=0; i < arabicSingle.length; i+=2) {
             htmlContent += `<div class="a4-paper">`;
             htmlContent += generateSingleBlock(arabicSingle[i]);
@@ -202,14 +218,14 @@
             htmlContent += `</div>`;
         }
 
-        // 2. الـ 10 صفحات التالية (عربي شعر مزدوج)
+        // 2. توليد 10 صفحات (عربي شعر مزدوج)
         for(let i=0; i < arabicDouble.length; i++) {
             htmlContent += `<div class="a4-paper">`;
             htmlContent += generateDoubleBlock(arabicDouble[i][0], arabicDouble[i][1]);
             htmlContent += `</div>`;
         }
 
-        // 3. آخر 10 صفحات (كردي مفرد) دە لاپەڕەی کۆتا
+        // 3. توليد آخر 10 صفحات (كردي مفرد)
         for(let i=0; i < kurdishSingle.length; i+=2) {
             htmlContent += `<div class="a4-paper" dir="rtl" lang="ku">`;
             htmlContent += generateSingleBlock(kurdishSingle[i]);
@@ -217,34 +233,9 @@
             htmlContent += `</div>`;
         }
 
-        // حقن الصفحات في الموقع
+        // إدراج كل الصفحات داخل الموقع
         container.innerHTML = htmlContent;
 
-        // دالة التنزيل
-        function generateAllPDF() {
-            const element = document.getElementById('pdf-container');
-            const loadingText = document.getElementById('loading');
-            
-            // إظهار رسالة التحميل لأن الـ 50 صفحة ستأخذ بعض الوقت
-            loadingText.style.display = 'block';
-
-            // إعدادات المكتبة (تم تخفيف الدقة قليلاً scale: 1.5 لمنع انهيار المتصفح مع 50 صفحة)
-            const opt = {
-                margin:       0,
-                filename:     'كراسة_الخط_الشاملة_50_صفحة.pdf',
-                image:        { type: 'jpeg', quality: 0.95 },
-                html2canvas:  { scale: 1.5, useCORS: true }, 
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            // البدء بالتحميل
-            html2pdf().set(opt).from(element).save().then(() => {
-                loadingText.innerHTML = '✅ تمت العملية بنجاح! راجع مجلد التنزيلات.';
-                setTimeout(() => { loadingText.style.display = 'none'; }, 5000);
-            }).catch(err => {
-                loadingText.innerHTML = '❌ حدث خطأ، تأكد من استخدام متصفح حديث مثل Chrome.';
-            });
-        }
     </script>
 </body>
 </html>
