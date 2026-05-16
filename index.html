@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>موسوعة الخط العربي والكردي - 50 صفحة</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            background-color: #2c3e50;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header-panel {
+            background: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+            width: 90%;
+            max-width: 800px;
+        }
+
+        .header-panel h1 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+
+        .btn-download {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 6px rgba(39, 174, 96, 0.4);
+            margin-top: 10px;
+        }
+
+        .btn-download:hover { background-color: #2ecc71; }
+        
+        .loading-text {
+            display: none;
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 15px;
+            padding: 10px;
+            border: 2px dashed #e74c3c;
+            border-radius: 5px;
+        }
+
+        /* الحاوية التي ستجمع الـ 50 صفحة */
+        #pdf-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* إعدادات ورقة A4 */
+        .a4-paper {
+            width: 210mm;
+            height: 297mm;
+            background-color: white;
+            box-sizing: border-box;
+            /* هوامش دقيقة جداً لملء الورقة بـ 14 سطراً (بدون مساحة بيضاء مهدرة) */
+            padding: 22.5mm 15mm; 
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            page-break-after: always;
+            overflow: hidden;
+        }
+
+        /* سطر الكتابة الموحد */
+        .line-row {
+            height: 1.8cm;
+            line-height: 1.7cm; /* لضبط الحروف لتلامس السطر */
+            border-bottom: 2px solid #a4b0be; /* السطر الأزرق */
+            font-family: 'Aref Ruqaa', serif;
+            font-size: 38px;
+            white-space: nowrap;
+            padding-right: 15px;
+            box-sizing: border-box;
+        }
+
+        /* لضبط المسافات في اللغة الكردية لتظهر واضحة */
+        [lang="ku"] .line-row {
+            font-size: 36px;
+            padding-right: 25px;
+        }
+
+        .master { color: #000; font-weight: bold; }
+        .trace { color: #d1d8e0; }
+        .empty { color: transparent; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .header-panel { display: none !important; }
+            .a4-paper { box-shadow: none; margin: 0; }
+            #pdf-container { gap: 0; }
+        }
+    </style>
+    <!-- مكتبة تحويل لـ PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+    <div class="header-panel">
+        <h1>كراسة الـ 50 صفحة (عربي + كردي)</h1>
+        <p>30 صفحة عربي، 10 صفحات شعر مزدوج، 10 صفحات كردي</p>
+        <button class="btn-download" onclick="generateAllPDF()">📥 تحميل الـ 50 صفحة بملف PDF واحد</button>
+        <div id="loading" class="loading-text">⏳ جاري صناعة 50 صفحة... العملية تستغرق حوالي 20 ثانية، الرجاء عدم إغلاق الصفحة!</div>
+    </div>
+
+    <div id="pdf-container">
+        <!-- سيتم توليد الـ 50 صفحة هنا برمجياً -->
+    </div>
+
+    <script>
+        // 1. بيانات الدروس العربية (60 درساً = 30 صفحة، لأن كل صفحة تحوي درسيْن)
+        const arabicSingle = [
+            "ا ل ك ط ظ", "ب ت ث ف", "ج ح خ", "د ذ ر ز", "س ش", "ص ض", "ع غ", "م ن هـ و ي", "ق ف", "لا ـلا",
+            "أب أخ أم", "جد عم خال", "باب بيت نور", "قمر شمس نجم", "سيف رمح قوس", "علم عمل أمل", "صدق صبر شكر", "قلب عقل روح", "بحر نهر موج", "ورد زهر شجر",
+            "أسد فهد نمر", "صقر نسر طير", "ماء هواء نار", "أرض سماء غيم", "ليل نهار فجر", "كتاب دفتر قلم", "مدرسة جامعة علم", "طبيب مهندس معلم", "وطن أمان سلام", "صدق وفاء إخلاص",
+            "العلم نور", "الجهل ظلام", "الوقت كالسيف", "من جد وجد", "من زرع حصد", "العقل السليم", "في الجسم السليم", "الكلمة الطيبة", "خير الكلام", "احترام الكبير",
+            "الصبر مفتاح الفرج", "النظافة من الإيمان", "الكلمة الطيبة صدقة", "احترام الكبير واجب", "العطف على الصغير", "بر الوالدين جنة", "القناعة كنز لا يفنى", "الصديق وقت الضيق", "في التأني السلامة", "وفي العجلة الندامة",
+            "يد واحدة لا تصفق", "الجار قبل الدار", "الرفيق قبل الطريق", "الأفعال أبلغ من الأقوال", "عامل الناس كما تحب", "العلم يبني بيوتاً", "الجهل يهدم بيت العز", "من طلب العلا سهر", "خير جليس في الزمان", "وما نيل المطالب بالتمني"
+        ];
+
+        // 2. بيانات الشعر العربي المزدوج (10 أبيات = 10 صفحات، كل صفحة بها بيت كامل)
+        const arabicDouble = [
+            ["دقات قلب المرء قائلة له", "إن الحياة دقائق وثواني"],
+            ["وما نيل المطالب بالتمني", "ولكن تؤخذ الدنيا غلابا"],
+            ["أنا لغة الأعراب من فطروا", "على الفصاحة من نبعي ومن طيني"],
+            ["السيف أصدق أنباء من الكتب", "في حده الحد بين الجد واللعب"],
+            ["الخيل والليل والبيداء تعرفني", "والسيف والرمح والقرطاس والقلم"],
+            ["ألا ليت الشباب يعود يوماً", "فأخبره بما فعل المشيب"],
+            ["لا تحسبن المجد تمراً أنت آكله", "لن تبلغ المجد حتى تلعق الصبرا"],
+            ["إذا الشعب يوماً أراد الحياة", "فلا بد أن يستجيب القدر"],
+            ["الأم مدرسة إذا أعددتها", "أعددت شعباً طيب الأعراق"],
+            ["ومن هاب أسباب المنايا ينلنه", "وإن يرق أسباب السماء بسلم"]
+        ];
+
+        // 3. بيانات اللغة الكردية (20 درساً = 10 صفحات)
+        const kurdishSingle = [
+            "ئـ ب پ ت ج چ", "ح خ د ر ڕ ز ژ", 
+            "س ش ع غ ف ڤ", "ق ک گ ل ڵ م", 
+            "ن هـ ە و ۆ ی ێ", "دار، مار، کار، بار", 
+            "دەست، چاو، گوێ، قاچ", "خۆزگە، هیوا، ژیان، ئاوات", 
+            "هەولێر، سلێمانی، دهۆک", "هەڵەبجە، کەرکوک، زاخۆ",
+            "کوردستان نیشتمانمە", "زمانی کوردی ناسنامەمە", 
+            "پێشمەرگە پارێزەری خاکە", "کتێب باشترین هاوڕێیە", 
+            "زانست ڕووناکی ژیانە", "قسەی هەق تاڵە", 
+            "دڵۆپ دڵۆپ دەبێتە گۆم", "بەرد لە جێی خۆی سەنگینە", 
+            "دار هەتا تەڕە دەچەمێتەوە", "کەس بە دۆی خۆی ناڵێت ترشە"
+        ];
+
+        const container = document.getElementById('pdf-container');
+        let htmlContent = '';
+
+        // بناء نموذج مفرد (سطر أستاذ + 4 شف + 2 فارغ) = 7 أسطر
+        function generateSingleBlock(text) {
+            let block = `<div class="line-row master">${text}</div>`;
+            for(let i=0; i<4; i++) block += `<div class="line-row trace">${text}</div>`;
+            for(let i=0; i<2; i++) block += `<div class="line-row empty"></div>`;
+            return block;
+        }
+
+        // بناء نموذج مزدوج (سطرين أستاذ + 8 شف + 4 فارغ) = 14 سطراً تملأ الورقة بالكامل
+        function generateDoubleBlock(line1, line2) {
+            let block = `<div class="line-row master">${line1}</div>`;
+            block += `<div class="line-row master">${line2}</div>`;
+            for(let i=0; i<4; i++) {
+                block += `<div class="line-row trace">${line1}</div>`;
+                block += `<div class="line-row trace">${line2}</div>`;
+            }
+            for(let i=0; i<2; i++) {
+                block += `<div class="line-row empty"></div>`;
+                block += `<div class="line-row empty"></div>`;
+            }
+            return block;
+        }
+
+        // --- توليد الـ 50 صفحة ---
+
+        // 1. أول 30 صفحة (عربي مفرد)
+        for(let i=0; i < arabicSingle.length; i+=2) {
+            htmlContent += `<div class="a4-paper">`;
+            htmlContent += generateSingleBlock(arabicSingle[i]);
+            htmlContent += generateSingleBlock(arabicSingle[i+1]);
+            htmlContent += `</div>`;
+        }
+
+        // 2. الـ 10 صفحات التالية (عربي شعر مزدوج)
+        for(let i=0; i < arabicDouble.length; i++) {
+            htmlContent += `<div class="a4-paper">`;
+            htmlContent += generateDoubleBlock(arabicDouble[i][0], arabicDouble[i][1]);
+            htmlContent += `</div>`;
+        }
+
+        // 3. آخر 10 صفحات (كردي مفرد) دە لاپەڕەی کۆتا
+        for(let i=0; i < kurdishSingle.length; i+=2) {
+            htmlContent += `<div class="a4-paper" dir="rtl" lang="ku">`;
+            htmlContent += generateSingleBlock(kurdishSingle[i]);
+            htmlContent += generateSingleBlock(kurdishSingle[i+1]);
+            htmlContent += `</div>`;
+        }
+
+        // حقن الصفحات في الموقع
+        container.innerHTML = htmlContent;
+
+        // دالة التنزيل
+        function generateAllPDF() {
+            const element = document.getElementById('pdf-container');
+            const loadingText = document.getElementById('loading');
+            
+            // إظهار رسالة التحميل لأن الـ 50 صفحة ستأخذ بعض الوقت
+            loadingText.style.display = 'block';
+
+            // إعدادات المكتبة (تم تخفيف الدقة قليلاً scale: 1.5 لمنع انهيار المتصفح مع 50 صفحة)
+            const opt = {
+                margin:       0,
+                filename:     'كراسة_الخط_الشاملة_50_صفحة.pdf',
+                image:        { type: 'jpeg', quality: 0.95 },
+                html2canvas:  { scale: 1.5, useCORS: true }, 
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // البدء بالتحميل
+            html2pdf().set(opt).from(element).save().then(() => {
+                loadingText.innerHTML = '✅ تمت العملية بنجاح! راجع مجلد التنزيلات.';
+                setTimeout(() => { loadingText.style.display = 'none'; }, 5000);
+            }).catch(err => {
+                loadingText.innerHTML = '❌ حدث خطأ، تأكد من استخدام متصفح حديث مثل Chrome.';
+            });
+        }
+    </script>
+</body>
+</html>
